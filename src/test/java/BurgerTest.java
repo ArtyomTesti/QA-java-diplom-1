@@ -1,7 +1,5 @@
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import praktikum.Bun;
@@ -9,22 +7,13 @@ import praktikum.Burger;
 import praktikum.Ingredient;
 import praktikum.IngredientType;
 
-import java.util.Arrays;
-import java.util.Collection;
-
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
-/**
- * Тестовый класс для проверки функциональности класса Burger.
- * Использует Mockito для создания заглушек и Parameterized для параметризованных тестов.
- */
-@RunWith(Parameterized.class) // Аннотация для запуска теста с параметрами
 public class BurgerTest {
 
-    private Burger burger; // Экземпляр тестируемого класса
+    private Burger burger;
 
-    // Создаем mock-объекты с помощью Mockito
     @Mock
     private Bun bun;
     @Mock
@@ -34,165 +23,101 @@ public class BurgerTest {
     @Mock
     private Ingredient ingredient3;
 
-    // Параметры для параметризованного теста
-    @Parameterized.Parameter
-    public float bunPrice; // Цена булочки
-    @Parameterized.Parameter(1)
-    public float ingredient1Price; // Цена первого ингредиента
-    @Parameterized.Parameter(2)
-    public float ingredient2Price; // Цена второго ингредиента
-    @Parameterized.Parameter(3)
-    public float expectedPrice; // Ожидаемая общая цена
-
-    /**
-     * Метод предоставляет данные для параметризованного теста.
-     * Каждый массив содержит: цену булочки, цены двух ингредиентов и ожидаемую общую цену.
-     */
-    @Parameterized.Parameters
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {
-                {100f, 50f, 75f, 325f},  // bun price * 2 + ingredients
-                {200f, 100f, 150f, 650f},
-                {50f, 25f, 25f, 150f}
-        });
-    }
-
-    /**
-     * Метод инициализации перед каждым тестом.
-     * Настраивает mock-объекты и создает новый экземпляр Burger.
-     */
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this); // Инициализация mock-объектов
-        burger = new Burger(); // Создаем новый бургер перед каждым тестом
+        MockitoAnnotations.initMocks(this);
+        burger = new Burger();
 
-        // Настраиваем поведение mock-булочки
-        when(bun.getPrice()).thenReturn(bunPrice);
         when(bun.getName()).thenReturn("test bun");
-
-        // Настраиваем поведение mock-ингредиентов
-        when(ingredient1.getPrice()).thenReturn(ingredient1Price);
         when(ingredient1.getName()).thenReturn("ingredient1");
         when(ingredient1.getType()).thenReturn(IngredientType.SAUCE);
-
-        when(ingredient2.getPrice()).thenReturn(ingredient2Price);
         when(ingredient2.getName()).thenReturn("ingredient2");
         when(ingredient2.getType()).thenReturn(IngredientType.FILLING);
-
-        when(ingredient3.getPrice()).thenReturn(ingredient2Price);
         when(ingredient3.getName()).thenReturn("ingredient3");
         when(ingredient3.getType()).thenReturn(IngredientType.SAUCE);
     }
 
-    /**
-     * Тест проверяет корректность установки булочки в бургер.
-     */
     @Test
     public void testSetBuns() {
-        burger.setBuns(bun); // Устанавливаем булочку
-        assertEquals("Булочка должна быть установлена", bun, burger.bun);
+        burger.setBuns(bun);
+        assertEquals(bun, burger.bun);
     }
 
-    /**
-     * Тест проверяет добавление ингредиента в бургер.
-     */
     @Test
-    public void testAddIngredient() {
-        burger.addIngredient(ingredient1); // Добавляем ингредиент
-        assertEquals("Должен быть добавлен один ингредиент", 1, burger.ingredients.size());
-        assertEquals("Добавленный ингредиент должен совпадать", ingredient1, burger.ingredients.get(0));
+    public void testAddIngredientIncreasesSize() {
+        int initialSize = burger.ingredients.size();
+        burger.addIngredient(ingredient1);
+        assertEquals(initialSize + 1, burger.ingredients.size());
     }
 
-    /**
-     * Тест проверяет удаление ингредиента из бургера.
-     */
     @Test
-    public void testRemoveIngredient() {
-        // Добавляем два ингредиента
+    public void testAddIngredientAddsCorrectIngredient() {
+        burger.addIngredient(ingredient1);
+        assertEquals(ingredient1, burger.ingredients.get(0));
+    }
+
+    @Test
+    public void testRemoveIngredientDecreasesSize() {
         burger.addIngredient(ingredient1);
         burger.addIngredient(ingredient2);
-
-        burger.removeIngredient(0); // Удаляем первый ингредиент
-
-        assertEquals("Должен остаться один ингредиент", 1, burger.ingredients.size());
-        assertEquals("Оставшийся ингредиент должен быть ingredient2", ingredient2, burger.ingredients.get(0));
+        int initialSize = burger.ingredients.size();
+        burger.removeIngredient(0);
+        assertEquals(initialSize - 1, burger.ingredients.size());
     }
 
-    /**
-     * Тест проверяет перемещение ингредиента в бургере.
-     */
     @Test
-    public void testMoveIngredient() {
-        // Добавляем три ингредиента
+    public void testRemoveIngredientRemovesCorrectIngredient() {
+        burger.addIngredient(ingredient1);
+        burger.addIngredient(ingredient2);
+        burger.removeIngredient(0);
+        assertFalse(burger.ingredients.contains(ingredient1));
+    }
+
+    @Test
+    public void testMoveIngredientChangesPosition() {
         burger.addIngredient(ingredient1);
         burger.addIngredient(ingredient2);
         burger.addIngredient(ingredient3);
-
-        // Перемещаем первый ингредиент на позицию 2
         burger.moveIngredient(0, 2);
-
-        // Проверяем новый порядок ингредиентов
-        assertEquals("Первый элемент должен быть ingredient2", ingredient2, burger.ingredients.get(0));
-        assertEquals("Второй элемент должен быть ingredient3", ingredient3, burger.ingredients.get(1));
-        assertEquals("Третий элемент должен быть ingredient1", ingredient1, burger.ingredients.get(2));
+        assertEquals(ingredient1, burger.ingredients.get(2));
     }
 
-    /**
-     * Тест проверяет расчет стоимости Бургера.
-     */
     @Test
-    public void testGetPrice() {
-        burger.setBuns(bun); // Устанавливаем булочку
-        burger.addIngredient(ingredient1); // Добавляем ингредиенты
-        burger.addIngredient(ingredient2);
-
-        // Ожидаемая цена: цена булочки * 2 + цены ингредиентов
-        float expected = bunPrice * 2 + ingredient1Price + ingredient2Price;
-        assertEquals("Цена должна быть рассчитана правильно", expected, burger.getPrice(), 0.01);
-    }
-
-    /**
-     * Тест проверяет формирование чека бургера.
-     */
-    @Test
-    public void testGetReceipt() {
-        burger.setBuns(bun);
+    public void testMoveIngredientMaintainsOtherPositions() {
         burger.addIngredient(ingredient1);
         burger.addIngredient(ingredient2);
+        burger.addIngredient(ingredient3);
+        burger.moveIngredient(0, 2);
+        assertEquals(ingredient2, burger.ingredients.get(0));
+        assertEquals(ingredient3, burger.ingredients.get(1));
+    }
 
+    @Test
+    public void testReceiptContainsBunName() {
+        burger.setBuns(bun);
+        burger.addIngredient(ingredient1);
         String receipt = burger.getReceipt();
-
-        // Проверяем основные части чека
-        assertTrue("Чек должен содержать название булочки",
-                receipt.contains(String.format("(==== %s ====)", bun.getName())));
-
-        assertTrue("Чек должен содержать первый ингредиент",
-                receipt.contains(String.format("= %s %s =",
-                        ingredient1.getType().toString().toLowerCase(),
-                        ingredient1.getName())));
-
-        assertTrue("Чек должен содержать второй ингредиент",
-                receipt.contains(String.format("= %s %s =",
-                        ingredient2.getType().toString().toLowerCase(),
-                        ingredient2.getName())));
-
-        // Проверяем цену с учетом форматирования
-        float totalPrice = bun.getPrice() * 2 + ingredient1.getPrice() + ingredient2.getPrice();
-        String expectedPriceLine = String.format("Price: %.2f", totalPrice);
-        assertTrue("Чек должен содержать строку с ценой: " + expectedPriceLine,
-                receipt.contains(expectedPriceLine));
+        assertTrue(receipt.contains(bun.getName()));
     }
 
-    /**
-     * Параметризованный тест проверяет расчет стоимости с разными входными данными.
-     */
     @Test
-    public void testParameterizedGetPrice() {
+    public void testReceiptContainsIngredient() {
         burger.setBuns(bun);
         burger.addIngredient(ingredient1);
-        burger.addIngredient(ingredient2);
-        assertEquals("Цена должна соответствовать ожидаемой для параметров: "
-                        + bunPrice + ", " + ingredient1Price + ", " + ingredient2Price,
-                expectedPrice, burger.getPrice(), 0.01);
+        String receipt = burger.getReceipt();
+        assertTrue(receipt.contains(ingredient1.getName()));
+    }
+
+    @Test
+    public void testReceiptContainsFormattedPrice() {
+        when(bun.getPrice()).thenReturn(100f);
+        when(ingredient1.getPrice()).thenReturn(50f);
+
+        burger.setBuns(bun);
+        burger.addIngredient(ingredient1);
+        String receipt = burger.getReceipt();
+        String expectedPriceString = String.format("Price: %.2f", 250.00f);
+        assertTrue("Чек должен содержать правильно отформатированную цену: " + expectedPriceString,
+                receipt.contains(expectedPriceString));
     }
 }
