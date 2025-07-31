@@ -93,31 +93,21 @@ public class BurgerTest {
     }
 
     @Test
-    public void testReceiptContainsBunName() {
-        burger.setBuns(bun);
-        burger.addIngredient(ingredient1);
-        String receipt = burger.getReceipt();
-        assertTrue(receipt.contains(bun.getName()));
-    }
-
-    @Test
-    public void testReceiptContainsIngredient() {
-        burger.setBuns(bun);
-        burger.addIngredient(ingredient1);
-        String receipt = burger.getReceipt();
-        assertTrue(receipt.contains(ingredient1.getName()));
-    }
-
-    @Test
-    public void testReceiptContainsFormattedPrice() {
+    public void testGetReceipt() {
         when(bun.getPrice()).thenReturn(100f);
         when(ingredient1.getPrice()).thenReturn(50f);
 
         burger.setBuns(bun);
         burger.addIngredient(ingredient1);
-        String receipt = burger.getReceipt();
-        String expectedPriceString = String.format("Price: %.2f", 250.00f);
-        assertTrue("Чек должен содержать правильно отформатированную цену: " + expectedPriceString,
-                receipt.contains(expectedPriceString));
+
+        String expected = String.format(
+                "(==== test bun ====)%n" +
+                        "= sauce ingredient1 =%n" +
+                        "(==== test bun ====)%n" +
+                        "%n" +
+                        "Price: 250,00%n"
+        );
+
+        assertEquals(expected, burger.getReceipt());
     }
 }
